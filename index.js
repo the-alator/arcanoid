@@ -6,14 +6,15 @@ var x = canvas.width/2, y = canvas.height - canvas.height/4;
 var dx = 1, dy = 1;
 var radius = 10;
 
-var brickColumns=4;
+var brickColumns=8;
 var brickRows=3;
 
-var brickWidth=75;
-var brickHeight=20;
+var brickWidth=125;
+var brickHeight=25;
 // var brickX=20;
 // var brickY=30;
-var brickVGap=5;
+var brickVGap=15;
+var BASIC_BRICK_H_GAP=20;
 var brickHGap=20;
 
 var bricks  = [];
@@ -22,7 +23,7 @@ var bricks  = [];
 ///////////////////////////
 
 createBricks();
-setInterval(loop, 20);
+setInterval(loop, 3);
 
 /////////////////
 
