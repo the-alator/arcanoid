@@ -1,41 +1,38 @@
-
 var canvas = document.getElementById("mainCanv");
 var draw = canvas.getContext("2d");
 
-var x = canvas.width/2, y = canvas.height - canvas.height/4;
-var dx = 1, dy = 1;
+var ballX = canvas.width/2, ballY = canvas.height - canvas.height/4;
+var dx = 1, dy = -1;
 var radius = 10;
 
-var brickColumns=8;
-var brickRows=3;
+var brickColumns=10;
+var brickRows=6;
 
-var brickWidth=125;
-var brickHeight=25;
-// var brickX=20;
-// var brickY=30;
-var brickVGap=15;
-var BASIC_BRICK_H_GAP=20;
-var brickHGap=20;
+var brickWidth;
+var brickHeight;
+var brickVGap;
+var brickHGap;
 
 var bricks  = [];
 
-
+var platformX, platformY;
+var platformWidth, platformHeight;
 ///////////////////////////
 
-createBricks();
+init();
 setInterval(loop, 3);
 
 /////////////////
 
 function loop(){
     //check next step
-    if(x + dx < 0 || x + dx > canvas.width)
+    if(ballX + dx < 0 || ballX + dx > canvas.width)
         dx = -dx;
-    if(y + dy < 0 || y + dy > canvas.height)
+    if(ballY + dy < 0 || ballY + dy > canvas.height)
         dy = -dy;
     //go to next step
-    x += dx;
-    y += dy;
+    ballX += dx;
+    ballY += dy;
     repaint();
 }
 function repaint(){
@@ -43,21 +40,20 @@ function repaint(){
 
     drawBall();
     drawBricks();
+    drawPlatform();
 }
 function drawBall(){
     draw.beginPath();
-    draw.arc(x, y, radius, 0, Math.PI*2,false);
     draw.fillStyle = "green";
+    draw.arc(ballX, ballY, radius, 0, Math.PI*2,false);
     draw.fill();
     draw.closePath();
 }
 function drawBricks(){
     for(var a = 0; a < bricks.length; a++){
         draw.beginPath();
-        console.log(bricks.length + "brldb");
-        console.log("DRW:" + bricks[a].x + " " + bricks[a].y);
-        draw.rect(bricks[a].x,bricks[a].y,brickWidth,brickHeight);
         draw.fillStyle="red";
+        draw.rect(bricks[a].x,bricks[a].y,brickWidth,brickHeight);
         draw.fill();
         draw.closePath();
     }
@@ -73,25 +69,48 @@ function drawBricks(){
     //     }
     // }
 }
+function drawPlatform(){
+    draw.beginPath();
+    draw.fillStyle="orange";
+    draw.rect(platformX, platformY, platformWidth, platformHeight);
+    draw.fill();
+    draw.closePath();
+}
 
+function init(){
+    document.addEventListener("mousemove",mouseMoved);
+    createBricks();
+    createPlatform();
+}
 
+function mouseMoved(event){
+    var tempPlatformX = event.x - platformWidth / 2 - document.documentElement.clientWidth/8;
+    if(tempPlatformX <= 0)
+        platformX = 0;
+    else
+    if(tempPlatformX >= canvas.width - platformWidth)
+        platformX = canvas.width - platformWidth;
+    else
+        platformX = tempPlatformX;
+}
 function createBricks(){
     var currentBrick;
-    // brickHGap = (canvas.width / 5) /  (brickColumns + 1);
-    // brickVGap = (canvas.height / 2 * 0.3) /  (brickRows + 1);
-    // brickWidth = canvas.width * 0.8 / brickColumns;
-    // brickHeight = canvas.height / 2 * 0.7 / brickColumns;
+    brickHGap = (canvas.width / 10) /  (brickColumns + 1);
+    brickWidth = (canvas.width - canvas.width / 10) / brickColumns;
+    brickHeight = brickWidth / 5;
+    brickVGap = brickHeight / 2;
     for(var a = 0; a < brickRows; a++){
         for(var b = 0; b < brickColumns; b++){
-           // currentI = brickRows * a + b;
             currentBrick = {};
             currentBrick.x = brickHGap + brickHGap*b + brickWidth*b;
             currentBrick.y = brickVGap + brickVGap*a + brickHeight*a;
-            console.log( currentBrick.x);
-            console.log( currentBrick.y);
-            console.log("\n");
             bricks.push(currentBrick);
         }
     }
-    console.log(bricks.length + "brl");
+}
+function createPlatform(){
+    platformWidth = canvas.width / 7;
+    platformHeight = platformWidth / 10;
+    platformX = (canvas.width - platformWidth) / 2;
+    platformY = canvas.height - platformHeight * 2;
 }
