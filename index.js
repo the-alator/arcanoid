@@ -19,12 +19,28 @@ var platformX, platformY;
 var platformWidth, platformHeight;
 ///////////////////////////
 
+// var arr = [];
+// arr[0] = 1;
+// arr[1] = null;
+// arr[2] = 3;
+// arr[3] = undefined;
+// arr[4] = 5;
+// arr[5] = undefined;
+// arr[100] = undefined;
+//
+// for(var val of arr)
+//     console.log(val);
+
+
 init();
 setInterval(loop, 3);
 
 /////////////////
 
 function loop(){
+    var nextBallX = ballX + dx;
+    var nextBallY = ballY + dy;
+    brickCollision(nextBallX,nextBallY);
     //check next step
     if(ballX + dx < 0 || ballX + dx > canvas.width)
         dx = -dx;
@@ -34,6 +50,41 @@ function loop(){
     ballX += dx;
     ballY += dy;
     repaint();
+}
+function brickCollision(nextBallX, nextBallY){
+    var ballArrX = (ballX / (brickWidth + brickHGap)) | 0;
+    var ballArrY = (ballY / (brickHeight + brickVGap)) | 0;
+    if(ballArrY > brickRows)
+        return;
+    var index;
+    index = (ballArrY - 1) * brickColumns + ballArrX;
+    if(bricks[index] != undefined && brickHorizontalSideCollision(bricks[index].x, bricks[index].x + brickWidth, bricks[index].y + brickHeight,nextBallX,nextBallY)) {
+        destroyBrick(index);
+        return;
+    }
+
+}
+function brickCornerCollision(brickX, brickY, ballX, ballY){
+
+}
+function brickHorizontalSideCollision(brickStartX, brickEndX, brickY, ballX, ballY){
+    if(ballX >= brickStartX && ballX <= brickEndX && Math.abs(ballY - brickY + 1) < radius){
+        dy = -dy;
+        return true;
+    }
+}
+function brickVerticalSideCollision(brickStartY, brickEndY, brickX, ballX, ballY){
+    if(ballY >= brickStartY && ballY <= brickEndY && Math.abs(ballX - brickX) < radius)
+        dx = -dx;
+}
+function plaformCollision(){
+
+}
+function borderCollision(){
+
+}
+function destroyBrick(index){
+    bricks[index] = null;
 }
 function repaint(){
     draw.clearRect(0,0,canvas.width, canvas.height);
@@ -51,23 +102,14 @@ function drawBall(){
 }
 function drawBricks(){
     for(var a = 0; a < bricks.length; a++){
+        if(bricks[a] == undefined)
+            continue;
         draw.beginPath();
         draw.fillStyle="red";
         draw.rect(bricks[a].x,bricks[a].y,brickWidth,brickHeight);
         draw.fill();
         draw.closePath();
     }
-    // for(var i=0;i<brickRows;i++){
-    //     var brickY1=brickY+i*(brickHeight+brickVGap);
-    //     for(var j=0;c<brickRows;j++){
-    //         var brickX1=brickX+i*(brickWidth+brickHGap);
-    //         draw.beginPath();
-    //         draw.rect(brickX1,brickY1,brickWidth,brickHeight);
-    //         draw.fillStyle="#B8860B";
-    //         draw.fill();
-    //         draw.closePath();
-    //     }
-    // }
 }
 function drawPlatform(){
     draw.beginPath();
