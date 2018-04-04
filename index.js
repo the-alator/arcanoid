@@ -3,12 +3,15 @@ var draw = canvas.getContext("2d");
 
 var gameStatus;
 var gameStatuses = {RUNNING: 1, STOPPED: 2 };
+var score = 0;
+var highscore = getHighScore();
 
 var ballX, ballY ;
 var dx, dy;
 var radius = 10;
 var ballState;
 var ballStates = {STATIC: 1, MOVING: 2, INVISIBLE:3};
+var ballStrength = 1;
 
 var brickColumns=10;
 var brickRows=6;
@@ -17,9 +20,13 @@ var brickWidth;
 var brickHeight;
 var brickVGap;
 var brickHGap;
+var brickTypes = [{color: "red", basicDurability: 1, score: 10},{color: "#FF7500", basicDurability: 2, score: 25},
+    {color: "#ffe028", basicDurability: 3, score: 45},{color: "#00650B", basicDurability: 4, score: 70},
+    {color: "#0a1dd4", basicDurability: 5, score: 100}];
 
 var bricks  = [];
 var brickCount = brickColumns * brickRows;
+
 
 var platformX, platformY;
 var platformWidth, platformHeight;
@@ -181,6 +188,7 @@ function borderCollision(ballX, ballY){
     if(ballY - radius <= 0)
         dy = -dy;
     if(ballY + radius >= canvas.height) {
+        score -= score / 10;
         size_life--;
         resizePlatform();
         if(size_life < 0)
@@ -191,11 +199,15 @@ function borderCollision(ballX, ballY){
 
 }
 function destroyBrick(index){
-    bricks[index] = null;
-    console.log("splitter");
-    brickCount--;
-    if(brickCount <= 0)
-        gameWin();
+    bricks[index].durability -= ballStrength;
+    if(bricks[index].durability <= 0) {
+        score += bricks[index].type.score;
+        bricks[index] = null;
+        console.log("splitter");
+        brickCount--;
+        if (brickCount <= 0)
+            gameWin();
+    }
 }
 
 var fontSize = canvas.height / 20;
@@ -225,6 +237,19 @@ function gameWin(){
     var endText = "You won! Congratulations!";
     draw.fillStyle = "green";
     draw.fillText(endText, (canvas.width - draw.measureText(endText).width) / 2,mainTextY);
+
+    if(score > highscore){
+        document.cookie = "highscore=" + score;
+        var newHsText = "New highscore: " + score;
+        draw.fillStyle = "green";
+        draw.fillText(newHsText, (canvas.width - draw.measureText(newHsText).width) / 2, (canvas.height - fontSize) / 2);
+    }else{
+        var sText = "Score: " + score;
+        draw.fillStyle = "green";
+        draw.fillText(sText, (canvas.width - draw.measureText(sText).width) / 2, (canvas.height - fontSize) / 2 - fontSize);
+        var hsText = "Highscore: " + highscore;
+        draw.fillText(hsText, (canvas.width - draw.measureText(hsText).width) / 2, (canvas.height) / 2);
+    }
 }
 
 
@@ -247,6 +272,22 @@ function mouseDown(event){
 function keyPressed(event){
     if(event.key === 'o'){
         gameOver();
+    }
+    if(event.key === 'h'){
+        document.cookie = "highscore=0";
+        highscore = 0;
+    }
+    if(event.key === 'd'){
+        for(br = 0; br < bricks.length; br++)
+            if(bricks[br] != undefined)
+                destroyBrick(br);
+
+    }
+    if(event.key === 's'){
+        if(ballStrength === 1)
+            ballStrength = 100;
+        else
+            ballStrength = 1;
     }
     if(event.key === 'w'){
         gameWin();
@@ -310,6 +351,7 @@ function init(){
     createBall();
     gameStatus = gameStatuses.RUNNING;
 }
+
 function createBricks(){
     var currentBrick;
     brickHGap = (canvas.width / 10) /  (brickColumns + 1);
@@ -321,7 +363,8 @@ function createBricks(){
             currentBrick = {};
             currentBrick.x = brickHGap + brickHGap*b + brickWidth*b;
             currentBrick.y = brickVGap + brickVGap*a + brickHeight*a;
-            currentBrick.num = a * brickColumns + b + 1;
+            currentBrick.type = brickTypes[randInt(0,5)];
+            currentBrick.durability = currentBrick.type.basicDurability;
             bricks.push(currentBrick);
         }
     }
@@ -351,8 +394,10 @@ function destroyBall(){
 
 function repaint(){
     draw.clearRect(0,0,canvas.width, canvas.height);
-    if(ballState !== ballStates.INVISIBLE) {
+    if(gameStatus === gameStatuses.RUNNING) {
         drawBall();
+        drawHighScore();
+        drawCurrentScore();
     }
     drawBricks();
     drawPlatform();
@@ -369,13 +414,13 @@ function drawBricks(){
         if(bricks[a] == undefined)
             continue;
         draw.beginPath();
-        draw.fillStyle="red";
+        draw.fillStyle = bricks[a].type.color;
         draw.rect(bricks[a].x,bricks[a].y,brickWidth,brickHeight);
         draw.fill();
         draw.closePath();
-        draw.font = (brickHeight - brickHeight / 3) + "px Georgia";
-        draw.fillStyle = "yellow";
-        draw.fillText(bricks[a].num,bricks[a].x + (brickWidth - draw.measureText(bricks[a].num).width)/2, bricks[a].y + brickHeight / 3 * 2 );
+        // draw.font = (brickHeight - brickHeight / 3) + "px Georgia";
+        // draw.fillStyle = "yellow";
+        // draw.fillText(bricks[a].num,bricks[a].x + (brickWidth - draw.measureText(bricks[a].num).width)/2, bricks[a].y + brickHeight / 3 * 2 );
     }
 }
 function drawPlatform(){
@@ -384,4 +429,29 @@ function drawPlatform(){
     draw.rect(platformX, platformY, platformWidth, platformHeight);
     draw.fill();
     draw.closePath();
+}
+var scoreFontSize = basicPlatformHeight + basicPlatformHeight/2;
+function drawCurrentScore(){
+    draw.font = scoreFontSize + "px Arial Black";
+    draw.fillStyle = "red";
+    draw.fillText("Current score: " + score,basicPlatformHeight, canvas.height - basicPlatformHeight);
+}
+var hscoreText = "Highscore: " + highscore;
+function drawHighScore(){
+    draw.font = scoreFontSize + "px Arial Black";
+    draw.fillStyle = "red";
+    draw.fillText(hscoreText,canvas.width - basicPlatformHeight - draw.measureText(hscoreText).width, canvas.height - basicPlatformHeight);
+}
+
+function randInt(min,max){
+    return (Math.floor(Math.random() * max)) + min;
+}
+function getHighScore(){
+    var hs = document.cookie.split("=")[1];
+    if(hs === undefined){
+            hs = 0;
+            document.cookie = "highscore=0";
+    }
+
+    return hs;
 }
