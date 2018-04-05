@@ -188,7 +188,7 @@ function borderCollision(ballX, ballY){
     if(ballY - radius <= 0)
         dy = -dy;
     if(ballY + radius >= canvas.height) {
-        score -= score / 10;
+        score -= Math.floor(score / 10);
         size_life--;
         resizePlatform();
         if(size_life < 0)
